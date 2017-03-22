@@ -11,12 +11,12 @@ Existing Work:
   Protein Dynamics Associated with Failed and Rescued Learning in the Ts65Dn Mouse Model of Down Syndrome:  http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0119491
 
 By Milestone 3, we will have: 
-  written our logistic regression function
-  written an expression to normalize our data (will have to normalize the protein expression values)
-  completed preliminary runs of data through all 4 experiments; have made predictions and determined mean squared errors
-  tested 1 or 2 alternative methods of handling missing data.
+  - written our logistic regression function
+  - written an expression to normalize our data (will have to normalize the protein expression values)
+  - completed preliminary runs of data through all 4 experiments; have made predictions and determined mean squared errors
+  - tested 1 or 2 alternative methods of handling missing data.
 At minimum, by May 15th, we will have:
-  choosen optimum missing data strategy (and other fine-tuning)
-  determined which proteins had the most impact in each experiment
-  completed data analysis of weight vectors, plus research into biological context
-  Ideally, our logistic regression algorithm will accurately predict the labels, and we will be able to determine the proteins most impactful in learning.
+  - chosen optimum missing data strategy (and other fine-tuning)
+  - determined which proteins had the most impact in each experiment
+  - completed data analysis of weight vectors, plus research into biological context
+Ideally, our logistic regression algorithm will accurately predict the labels, and we will be able to determine the proteins most impactful in learning.
