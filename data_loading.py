@@ -1,4 +1,5 @@
 import sys
+import csv
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 
@@ -10,21 +11,42 @@ def load(filename):
     (2) a matrix where the ith element has four labels describing the ith entry of the vector above.
     """
     data = np.loadtxt(filename, delimiter=',')
-    X = data[:, 0:data.shape[1]-4]
-    fullY = data[:, data.shape[1]-4:]
+    X = data[:, 0:data.shape[1]-4] # hard-coded for number of class columns
+    fullY = data[:, data.shape[1]-4:] # hard-coded for number of class columns
     return (X, fullY)
 
-def split_sets():
-    pass
+def split_sets(X, fullY):
+    """
+    """
+    data = X
+    labels = fullY[:,-1] # last column of 8 classes (0-7)
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=0)
+    for train_indices, test_indices in sss.split(data, labels): # split returns generator type
+        split_files(train_indices, data, fullY, "data/training.csv") # hard-coded because n_split = 1
+        split_files(test_indices, data, fullY, "data/testing.csv") # hard-coded because n_split = 1
 
+def split_files(index_list, data, labels, outfile):
+    """
+    """
+    data_out = []
+    data_csv = open(outfile, 'w')
+    for i in index_list:
+        entry = data[i,:]
+        print type(entry), entry.shape
+        entry = np.append(entry, labels[i,:])
+        data_out.append(entry)
+    np.savetxt(outfile, data_out, fmt='%1.6f', delimiter=',', newline='\n') # labels are also printed as floats
+
+def empty_vals():
+    """
+    """
+    pass
 
 def main(dataloc):
     X, fullY = load(dataloc)
-    print "X:", X[0,:]
-    print "Y:", fullY[0,:]
+    split_sets(X, fullY)
 
 if __name__=='__main__':
-    """Uncomment when ready"""
     if len(sys.argv)!=2:
         print 'Usage: python data_loading.py csv-data'
     else:
