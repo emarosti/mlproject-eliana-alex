@@ -1,3 +1,4 @@
 # Machine Learning Project: (Title)
 
-(StudentNames)
+Eliana Marostica & Alexandria Guo
+NOTE: had to reduce decimal points per data entry number
