@@ -38,13 +38,44 @@ def split_files(index_list, data, labels, outfile):
         data_out.append(entry)
     np.savetxt(outfile, data_out, fmt='%1.6f', delimiter=',', newline='\n') # labels are also printed as floats
 
-def empty_vals():
+def handle_missing(X):
     """
     """
-    pass
+    stats = column_stats(X) # maximums and minimums are not accurate
+    for col in range(X.shape[1]):
+        for row in range(X.shape[0]):
+            if X[row,col] == 0.0: X[row,col] = stats[2,col]
+    return X
+
+def normalize(X):
+    """
+    """
+    stats = column_stats(X)
+    for col in range(X.shape[1]):
+        max_min = stats[0,col] - stats[1,col]
+        for row in range(X.shape[0]):
+            X[row,col] = (X[row,col] - stats[1,col]) / max_min
+    return X
+
+def column_stats(X):
+    """HELPER FUNCTION
+    returns 3 x D array with column maximum, minimum, and mean (w/o zero values)
+    """
+    column_stats = np.zeros((3,X.shape[1]))
+    for col in range(X.shape[1]):
+        zero_count = 0.0
+        column_stats[0,col] = X[:,col].max()
+        column_stats[1,col] = X[:,col].min()
+        for row in range(X.shape[0]):
+            if X[row,col] == 0: zero_count += 1
+        column_stats[2,col] = X[:,col].sum() / (X.shape[0] - zero_count)
+    return column_stats
+
 
 def main(dataloc):
     X, fullY = load(dataloc)
+    X = handle_missing(X)
+    X = normalize(X)
     split_sets(X, fullY)
 
 if __name__=='__main__':
