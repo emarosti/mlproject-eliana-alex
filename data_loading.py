@@ -16,17 +16,21 @@ def load(filename):
 
 def split_sets(X, fullY, test_size=0.2):
     """given two matrices of data and associated labels,
-    split the dataset into a training and testing set (of proportion test_size,
-    default to 20%)
+    split the dataset into a training, dev, and testing set (of proportion test_size,
+    default to 20%, where testing and dev are each half the test_size)
     """
     data = X
     labels = fullY[:,-1] # last column of 8 classes (0-7)
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0)
-    for train_indices, test_indices in sss.split(data, labels): # split returns generator type
-        split_files(train_indices, data, fullY, "data/training.csv") # hard-coded because n_split = 1
-        split_files(test_indices, data, fullY, "data/testing.csv") # hard-coded because n_split = 1
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0) # change n_split for cross-validation
+    for train_indices, testdev_indices in sss.split(data, labels): # split returns generator type
+        split_csv(train_indices, data, fullY, "data/train.csv") # name is hard-coded because n_split = 1
+        testdevX, testdevY = reshape(testdev_indices, data, fullY)
+    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=0)
+    for test_indices, dev_indices in sss.split(testdevX, testdevY):
+        split_csv(dev_indices, testdevX, testdevY, "data/dev.csv") # name is hard-coded because n_split = 1
+        split_csv(test_indices, testdevX, testdevY, "data/test.csv") # name is hard-coded because n_split = 1
 
-def split_files(index_list, data, labels, outfile):
+def split_csv(index_list, data, labels, outfile):
     """HELPER FUNCTION
     saves selected indices of provided data and labels into a .csv file
     """
@@ -38,8 +42,20 @@ def split_files(index_list, data, labels, outfile):
         data_out.append(entry)
     np.savetxt(outfile, data_out, fmt='%1.6f', delimiter=',', newline='\n') # labels are also printed as floats
 
-def handle_missing(X):
+def reshape(index_list, data, labels):
+    """HELPER FUNCTION
+    returns selected indices of provided data and labels as ndarrays in original data format
     """
+    X = np.zeros((len(index_list), data.shape[1]))
+    y = np.zeros((len(index_list), labels.shape[1]))
+    for i in range(len(index_list)):
+        X[i,:] = data[index_list[i],:]
+        y[i,:] = labels[index_list[i],:]
+    return X, y
+
+def missing_mean(X):
+    """ MISSING DATA
+    replace missing values (0.0) with column/feature mean
     """
     stats = column_stats(X) # maximums and minimums are not accurate
     for col in range(X.shape[1]):
@@ -48,13 +64,25 @@ def handle_missing(X):
     return X
 
 def normalize(X):
-    """
+    """ FEATURE SCALING
+    (x - min) / (max - min)
     """
     stats = column_stats(X)
     for col in range(X.shape[1]):
         max_min = stats[0,col] - stats[1,col]
         for row in range(X.shape[0]):
             X[row,col] = (X[row,col] - stats[1,col]) / max_min
+    return X
+
+def standardize(X): # uses missing values (currently mean values) in stdev calculation
+    """ FEATURE SCALING
+    (x - mean) / stdev
+    """
+    stats = column_stats(X)
+    for col in range(X.shape[1]):
+        stdev = np.std(X[:,col])
+        for row in range(X.shape[0]):
+            X[row,col] = (X[row,col] - stats[2,col]) / stdev
     return X
 
 def column_stats(X):
@@ -74,8 +102,8 @@ def column_stats(X):
 
 def main(dataloc):
     X, fullY = load(dataloc)
-    X = handle_missing(X)
-    X = normalize(X)
+    X = missing_mean(X)
+    X = standardize(X)
     split_sets(X, fullY)
 
 if __name__=='__main__':
