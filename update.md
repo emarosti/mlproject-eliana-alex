@@ -20,9 +20,10 @@ We are right on track with our original plan. In the weeks to come, we need to c
 
 -tested other missing data strategies
 -choose our optimum missing data strategy
+-implement gridsearch (tuning hyperparameters)
 -determine the optimum linear classifier
--determined which proteins had the most impact in each experiment
--completed data analysis of weight vectors, plus research into biological context 
+-determined which proteins had the most impact in each experiment (implement "show_significant_features")
+-completed data analysis of weight vectors, plus research into biological context
 -determine the proteins most impactful in learning.
 
 
