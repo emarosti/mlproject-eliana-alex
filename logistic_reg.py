@@ -113,6 +113,29 @@ def main(dataloc):
 
     #featurelist = map(lambda x:x[0], sorted(featuremap.items(), key=lambda x:x[1])) # from index to feature
 
+    print 'LOGISTIC REGRESSION'
+    lr_hyperparamdict = logreg_gridsearch(trainX, trainY, devX, devy,
+    # originally [5, 25, 125]; [0.1, 0.01, 'step']; [0, 0.00001]; [1, 200]
+                                   maxiter_values=[5, 25, 125], # number of epochs
+                                   eta_values=[0.1, 0.01, 'step'], # learning rate
+                                   alpha_values=[0, 0.00001], # regularization weight
+                                   batch_size_values=[1, 200]  # batch size for mini-batch gradient ascent:
+                                  )
+
+    print 'Hyperparameter search results:'
+    for params in lr_hyperparamdict:
+        print params, lr_hyperparamdict[params]['dev accuracy']
+
+    best_hyperparams = max(lr_hyperparamdict.items(), key=lambda x:x[1]['dev accuracy'])[0]
+
+    print 'Testing with hyperplane that produced best mean squared acc on dev:', best_hyperparams
+    lr_w, lr_b = lr_hyperparamdict[best_hyperparams]['hyperplane']
+    lr_predictions = predict_confidence(lr_w, lr_b, testX)
+    print 'All-or-nothing accuracy:', get_accuracy(testy, lr_predictions)
+    print 'Mean-squared accuracy:', get_meansq_accuracy(testy, lr_predictions)
+
+    show_significant_features(lr_w, featurelist)
+
 if __name__=='__main__':
     """Run the main function"""
     if len(sys.argv)!=2:
