@@ -63,6 +63,20 @@ def missing_mean(X):
             if X[row,col] == 0.0: X[row,col] = stats[2,col]
     return X
 
+def missing_rnorm(X):
+    """ MISSING DATA
+    replace missing values with random samples from a 
+    normal (Gaussian) distribution
+    """
+    stats = column_stats(X) # maximums and minimums are not accurate
+    for col in range(X.shape[1]):
+        for row in range(X.shape[0]):
+            if X[row,col] == 0.0: 
+                stdev = np.std(X[:,col])
+                X[row,col] = np.random.normal(stats[2,col], stdev)
+    return X
+
+
 def normalize(X):
     """ FEATURE SCALING
     (x - min) / (max - min)
@@ -102,7 +116,11 @@ def column_stats(X):
 
 def main(dataloc):
     X, fullY = load(dataloc)
-    X = missing_mean(X)
+    print 'X BEFORE:'
+    print X
+    X = missing_rnorm(X)
+    print 'X AFTER:'
+    print X
     X = standardize(X)
     split_sets(X, fullY)
 
