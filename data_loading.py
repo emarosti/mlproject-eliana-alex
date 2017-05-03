@@ -14,21 +14,24 @@ def load(filename):
     fullY = data[:, data.shape[1]-4:] # hard-coded for number of class columns
     return (X, fullY)
 
-def split_sets(X, fullY, test_size=0.2):
+def split_sets(X, fullY, test_size=0.2, splits=1):
     """given two matrices of data and associated labels,
     split the dataset into a training, dev, and testing set (of proportion test_size,
-    default to 20%, where testing and dev are each half the test_size)
+    default to 20%, where testing and dev are each half the test_size), some number of
+    times (splits) for future cross-validation
     """
     data = X
     labels = fullY[:,-1] # last column of 8 classes (0-7)
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0) # change n_split for cross-validation
-    for train_indices, testdev_indices in sss.split(data, labels): # split returns generator type
-        split_csv(train_indices, data, fullY, "data/train.csv") # name is hard-coded because n_split = 1
+    sss = StratifiedShuffleSplit(n_splits=splits, test_size=test_size, random_state=0)
+    i = 1
+    for train_indices, testdev_indices in sss.split(data, labels):
+        split_csv(train_indices, data, fullY, ("data/train_"+str(i)+".csv"))
         testdevX, testdevY = reshape(testdev_indices, data, fullY)
-    sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=0)
-    for test_indices, dev_indices in sss.split(testdevX, testdevY):
-        split_csv(dev_indices, testdevX, testdevY, "data/dev.csv") # name is hard-coded because n_split = 1
-        split_csv(test_indices, testdevX, testdevY, "data/test.csv") # name is hard-coded because n_split = 1
+        sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=0)
+        for test_indices, dev_indices in sss.split(testdevX, testdevY):
+            split_csv(dev_indices, testdevX, testdevY, ("data/dev_"+str(i)+".csv"))
+            split_csv(test_indices, testdevX, testdevY, ("data/test_"+str(i)+".csv"))
+        i += 1
 
 def split_csv(index_list, data, labels, outfile):
     """HELPER FUNCTION
@@ -65,13 +68,13 @@ def missing_mean(X):
 
 def missing_rnorm(X):
     """ MISSING DATA
-    replace missing values with random samples from a 
+    replace missing values with random samples from a
     normal (Gaussian) distribution
     """
     stats = column_stats(X) # maximums and minimums are not accurate
     for col in range(X.shape[1]):
         for row in range(X.shape[0]):
-            if X[row,col] == 0.0: 
+            if X[row,col] == 0.0:
                 stdev = np.std(X[:,col])
                 X[row,col] = np.random.normal(stats[2,col], stdev)
     return X
@@ -122,7 +125,7 @@ def main(dataloc):
     print 'X AFTER:'
     print X
     X = standardize(X)
-    split_sets(X, fullY)
+    split_sets(X, fullY, splits=5)
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
