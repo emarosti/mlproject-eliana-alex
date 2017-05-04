@@ -43,12 +43,12 @@ def main():
 
     accuracies, importances = train(trainX, trainY, 10, 'entropy', 70)
 
-    print 'accuracies\n', accuracies
-    print 'importances\n', importances
+    #print 'accuracies\n', accuracies
+    #print 'importances\n', importances
 
     significant_features = []
     for i in range(importances.shape[0]):
-        significant_features.append(extract_sig_features(10, features, importances[i,:]))
+        significant_features.append(extract_sig_features(12, features, importances[i,:]))
     significant_features = np.array(significant_features)
 
     print 'Most significant features:\n', significant_features

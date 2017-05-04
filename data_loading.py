@@ -121,7 +121,7 @@ def load_features(filename):
     load the feature values into an array and return that array
     """
     data = np.loadtxt(filename, dtype='str', delimiter=',')
-    print data
+    #print data
     return data
 
 def main(dataloc):
