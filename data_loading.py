@@ -116,6 +116,13 @@ def column_stats(X):
         column_stats[2,col] = X[:,col].sum() / (X.shape[0] - zero_count)
     return column_stats
 
+def load_features(filename):
+    """given a csv file of the feature names (proteins in this project),
+    load the feature values into an array and return that array
+    """
+    data = np.loadtxt(filename, dtype='str', delimiter=',')
+    print data
+    return data
 
 def main(dataloc):
     #X, fullY = load((dataloc+"data.csv")) # hard-coded
@@ -126,6 +133,8 @@ def main(dataloc):
     #print X
     #X = standardize(X)
     #split_sets(X, fullY, splits=5)
+    pass
+
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
