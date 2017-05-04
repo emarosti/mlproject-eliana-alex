@@ -1,7 +1,9 @@
-from sklearn.linear_model import SGDClassifier
+#from sklearn.linear_model import SGDClassifier
+from sklearn.svm import SVC
+#http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
 import numpy as np
 import sys
-from data_loading import load
+import data_loading     # contains helper functions
 
 # 0/1 NOTES
 # control/trisomy; saline/memantine; SC/CS
@@ -21,8 +23,21 @@ def classifier(X, y, classi, alpha, eta0, epoch, learn):
         intercepts.append(sgd.intercept_)
     return sgd, weights, intercepts
 
-def accuracy(sgd, testX, testY):
+def svc(X, y):
     """
+    """
+    weights = [] # may make into ndarray
+    intercepts = []
+    for i in range(y.shape[1]-1):
+        clf = SVC() #alter later?
+        clf.fit(X, y[i])
+        weights.append(clf.coef_)
+        intercepts.append(clf.coef_)
+    return clf, weights, intercepts
+
+def accuracy(clf, testX, testY):
+    """
+    for SVC
     """
     accuracies = []
     for i in range(testY.shape[1]-1):
@@ -49,38 +64,58 @@ def gridsearch(trainX, trainY, devX, devY, classifier_types, maxiter_values, eta
                         hyperparamdict[(classi, maxiter, eta0, learn, alpha)]['hyperplane'] = w, b
     return hyperparamdict
 
-def main():
-    """SHOULD ALREADY HAVE BEEN RUN FROM data_loading.py
-    X, fullY = load(dataloc)
-    X = data_loading.missing_mean(X) # not imported
-    X = data_loading.standardize(X) # not imported
-    data_loading.split_sets(X, fullY) # not imported"""
+def rebind(trainX, devX, testX, ):
+    """HELPER FUNCTION
+    """
+    X = np.append(trainX, devX, testX)
 
-    trainX, trainY = load("data/train.csv") # may want to un-hard-code later
-    devX, devY = load("data/dev.csv") # may want to un-hard-code later
-    testX, testY = load("data/test.csv") # may want to un-hard-code later
 
-    sgd, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
-    accuracies = accuracy(sgd, testX, testY)
+    return retrainX, redevX, retestX
 
-    print "weights:", w, "\naccuracies:", accuracies
+def main(dataloc, splits, chains=10):
+    # ??? SHOULD ALREADY HAVE BEEN RUN FROM data_loading.py
+    n_splits = int(splits)
+    n_chains = int(chains)
+    X, fullY = data_loading.load(dataloc+"/data.csv")
+    data_loading.split_sets(X, fullY, splits=n_splits)
 
+    #initialize array to calculate weight averages
+    mean_weights = np.zeros((n_splits*n_chains, X.shape[1]))
+    print "size", mean_weights.size, mean_weights.shape
+    for i in range(n_splits):
+        trainX, trainY = data_loading.load((dataloc+"/train_"+str(i+1)+".csv"))
+        devX, devY = data_loading.load((dataloc+"/dev_"+str(i+1)+".csv"))
+        testX, testY = data_loading.load((dataloc+"/test_"+str(i+1)+".csv"))
+        X = np.concatenate((trainX, devX, testX), axis=0)
+        for i in range(n_chains):
+            X = data_loading.missing_mean(X)
+            X = data_loading.standardize(X)
+            trainX = X[:(X.shape[0]*.8),:]
+            print trainX[:5,:]
+
+            #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
+            clf, w, b = svc(trainX, trainY)
+            accuracies = accuracy(clf, testX, testY)
+            print accuracies
+
+    #print "weights:", w, "\naccuracies:", accuracies
+"""
     hyperparamdict = gridsearch(trainX, trainY, devX, devY,
                                    classifier_types=['log', 'hinge'],
                                    maxiter_values=[5, 25], # number of epochs
                                    eta0_values=[0.1, 0.01], # eta0
                                    learn_values=['constant', 'optimal', 'invscaling'],
                                    alpha_values=[0.1, 0.00001]) # regularization weight
+"""
+    #print 'Hyperparameter search results:'
+    #for params in hyperparamdict:
+    #    print params, hyperparamdict[params]['dev accuracy']
 
-    print 'Hyperparameter search results:'
-    for params in hyperparamdict:
-        print params, hyperparamdict[params]['dev accuracy']
-
-    best_hyperparams = max(hyperparamdict.items(), key=lambda x:x[1]['dev accuracy'])[0]
+    #best_hyperparams = max(hyperparamdict.items(), key=lambda x:x[1]['dev accuracy'])[0]
 
 
 if __name__=='__main__':
-    if len(sys.argv)!=1:
-        print 'Usage: python linear_classifer.py'
+    if len(sys.argv)!=3:
+        print 'Usage: python linear_classifer.py dataloc num_splits'
     else:
-        main()
+        main(sys.argv[1], sys.argv[2])
