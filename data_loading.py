@@ -118,14 +118,14 @@ def column_stats(X):
 
 
 def main(dataloc):
-    X, fullY = load(dataloc)
-    print 'X BEFORE:'
-    print X
-    X = missing_rnorm(X)
-    print 'X AFTER:'
-    print X
-    X = standardize(X)
-    split_sets(X, fullY, splits=5)
+    #X, fullY = load((dataloc+"data.csv")) # hard-coded
+    #print 'X BEFORE:'
+    #print X
+    #X = missing_rnorm(X)
+    #print 'X AFTER:'
+    #print X
+    #X = standardize(X)
+    #split_sets(X, fullY, splits=5)
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
