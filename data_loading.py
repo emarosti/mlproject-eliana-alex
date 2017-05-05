@@ -10,8 +10,8 @@ def load(filename):
     (2) a matrix where the ith element has four labels describing the ith entry of the vector above.
     """
     data = np.loadtxt(filename, delimiter=',')
-    X = data[:, 0:data.shape[1]-4] # hard-coded for number of class columns
-    fullY = data[:, data.shape[1]-4:] # hard-coded for number of class columns
+    X = data[:, 0:data.shape[1]-5] # hard-coded for number of class columns
+    fullY = data[:, data.shape[1]-5:] # hard-coded for number of class columns
     return (X, fullY)
 
 def split_sets(X, fullY, test_size=0.2, splits=1):

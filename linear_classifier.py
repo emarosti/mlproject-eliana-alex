@@ -6,22 +6,22 @@ import sys
 import data_loading     # contains helper functions
 
 # 0/1 NOTES
-# control/trisomy; saline/memantine; SC/CS
+# control/trisomy; saline/memantine; SC/CS; no_learning/yes_learning
 
-def classifier(X, y, classi, alpha, eta0, epoch, learn):
-    """
-    type = 'log', 'hinge'
-    learn = 'constant', 'optimal', 'invscaling'
-    """
-    weights = []
-    intercepts = []
-    for i in range(y.shape[1]-1): # currently ignoring last 8-class column
-        sgd = SGDClassifier(loss=classi, alpha=alpha, eta0=eta0, n_iter=epoch,
-            learning_rate=learn, verbose=0)
-        sgd.fit(X, y[:,i])
-        weights.append(sgd.coef_)
-        intercepts.append(sgd.intercept_)
-    return sgd, weights, intercepts
+# def classifier(X, y, classi, alpha, eta0, epoch, learn):
+#     """ DEPRECATED
+#     type = 'log', 'hinge'
+#     learn = 'constant', 'optimal', 'invscaling'
+#     """
+#     weights = []
+#     intercepts = []
+#     for i in range(y.shape[1]-1): # currently ignoring last 8-class column
+#         sgd = SGDClassifier(loss=classi, alpha=alpha, eta0=eta0, n_iter=epoch,
+#             learning_rate=learn, verbose=0)
+#         sgd.fit(X, y[:,i])
+#         weights.append(sgd.coef_)
+#         intercepts.append(sgd.intercept_)
+#     return sgd, weights, intercepts
 
 def svc(X, y):
     """
@@ -64,14 +64,6 @@ def gridsearch(trainX, trainY, devX, devY, classifier_types, maxiter_values, eta
                         hyperparamdict[(classi, maxiter, eta0, learn, alpha)]['hyperplane'] = w, b
     return hyperparamdict
 
-def rebind(trainX, devX, testX, ):
-    """HELPER FUNCTION
-    """
-    X = np.append(trainX, devX, testX)
-
-
-    return retrainX, redevX, retestX
-
 def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     # ??? SHOULD ALREADY HAVE BEEN RUN FROM data_loading.py
     n_splits = int(splits)
@@ -95,10 +87,10 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
             #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
             clf = svc(tmptrainX, trainY)
             accuracies = accuracy(clf, testX, testY)
-            #print accuracies
+            print accuracies
             mean_acc[((i*n_chains)+j),:] = accuracies
             #mean_weights[((i*n_splits)+j),:] = ????
-            
+
     print "mean accuracies:", np.mean(mean_acc, axis=0)
     #print "mean weights:", np.mean(mean_weights, axis=0)
 """
