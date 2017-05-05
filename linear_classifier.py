@@ -26,14 +26,14 @@ def classifier(X, y, classi, alpha, eta0, epoch, learn):
 def svc(X, y):
     """
     """
-    weights = [] # may make into ndarray
-    intercepts = []
+    #weights = [] # may make into ndarray
+    #intercepts = []
     for i in range(y.shape[1]-1):
-        clf = SVC() #alter later?
-        clf.fit(X, y[i])
-        weights.append(clf.coef_)
-        intercepts.append(clf.coef_)
-    return clf, weights, intercepts
+        clf = SVC(kernel='rbf') # vs. default 'rbf' ..alter later?
+        clf.fit(X, y[:,i])
+        #weights.append(clf.coef_)
+        #intercepts.append(clf.coef_)
+    return clf#, weights, intercepts
 
 def accuracy(clf, testX, testY):
     """
@@ -41,7 +41,7 @@ def accuracy(clf, testX, testY):
     """
     accuracies = []
     for i in range(testY.shape[1]-1):
-        accuracies.append(sgd.score(testX, testY[:,i]))
+        accuracies.append(clf.score(testX, testY[:,i]))
     return accuracies
 
 def show_significant_features(w, featurelist):
@@ -72,33 +72,35 @@ def rebind(trainX, devX, testX, ):
 
     return retrainX, redevX, retestX
 
-def main(dataloc, splits, chains=10):
+def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     # ??? SHOULD ALREADY HAVE BEEN RUN FROM data_loading.py
     n_splits = int(splits)
     n_chains = int(chains)
     X, fullY = data_loading.load(dataloc+"/data.csv")
     data_loading.split_sets(X, fullY, splits=n_splits)
 
-    #initialize array to calculate weight averages
-    mean_weights = np.zeros((n_splits*n_chains, X.shape[1]))
-    print "size", mean_weights.size, mean_weights.shape
+    mean_weights = np.zeros((n_splits*n_chains, X.shape[1])) # initialize array to calculate weight averages
+    mean_acc = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
     for i in range(n_splits):
         trainX, trainY = data_loading.load((dataloc+"/train_"+str(i+1)+".csv"))
         devX, devY = data_loading.load((dataloc+"/dev_"+str(i+1)+".csv"))
         testX, testY = data_loading.load((dataloc+"/test_"+str(i+1)+".csv"))
         X = np.concatenate((trainX, devX, testX), axis=0)
-        for i in range(n_chains):
-            X = data_loading.missing_mean(X)
-            X = data_loading.standardize(X)
-            trainX = X[:(X.shape[0]*.8),:]
-            print trainX[:5,:]
+        indicesX = [trainX.shape[0], devX.shape[0], testX.shape[0]]
+        for j in range(n_chains):
+            tmpX = data_loading.missing_rnorm(X, X)
+            tmpX = data_loading.standardize(tmpX, X)
+            tmptrainX = tmpX[:indicesX[0],:]
 
             #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
-            clf, w, b = svc(trainX, trainY)
+            clf = svc(tmptrainX, trainY)
             accuracies = accuracy(clf, testX, testY)
-            print accuracies
-
-    #print "weights:", w, "\naccuracies:", accuracies
+            #print accuracies
+            mean_acc[((i*n_chains)+j),:] = accuracies
+            #mean_weights[((i*n_splits)+j),:] = ????
+            
+    print "mean accuracies:", np.mean(mean_acc, axis=0)
+    #print "mean weights:", np.mean(mean_weights, axis=0)
 """
     hyperparamdict = gridsearch(trainX, trainY, devX, devY,
                                    classifier_types=['log', 'hinge'],
@@ -115,7 +117,7 @@ def main(dataloc, splits, chains=10):
 
 
 if __name__=='__main__':
-    if len(sys.argv)!=3:
-        print 'Usage: python linear_classifer.py dataloc num_splits'
+    if (len(sys.argv) != 4):
+        print 'Usage: python linear_classifer.py dataloc num_splits num_chains'
     else:
-        main(sys.argv[1], sys.argv[2])
+        main(sys.argv[1], sys.argv[2], sys.argv[3])
