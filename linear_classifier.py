@@ -3,7 +3,7 @@ from sklearn.svm import SVC
 #http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html
 import numpy as np
 import sys
-import data_loading     # contains helper functions
+from data_loading import *  # contains helper functions
 
 # 0/1 NOTES
 # control/trisomy; saline/memantine; SC/CS; no_learning/yes_learning
@@ -44,6 +44,19 @@ def accuracy(clf, testX, testY):
         accuracies.append(clf.score(testX, testY[:,i]))
     return accuracies
 
+def extract_sig_features(k, features, importances):
+    """given an array of features names and an array of importance values
+    for each feature, return the k most important features
+    """
+    imps = np.copy(importances)
+    imp_feats = []
+    for i in range(k):
+        a = np.argmax(imps)
+        imp_feats.append(features[a])
+        imps[a] = 0
+
+    return np.array(imp_feats)
+
 def show_significant_features(w, featurelist):
     wsorted = np.argsort(w)
     print 'Features predicting:', ', '.join(map(lambda i: featurelist[i], wsorted[:30]))
@@ -65,23 +78,22 @@ def gridsearch(trainX, trainY, devX, devY, classifier_types, maxiter_values, eta
     return hyperparamdict
 
 def main(dataloc, splits, chains): # testing 5 splits, 10 chains
-    # ??? SHOULD ALREADY HAVE BEEN RUN FROM data_loading.py
     n_splits = int(splits)
     n_chains = int(chains)
-    X, fullY = data_loading.load(dataloc+"/data.csv")
-    data_loading.split_sets(X, fullY, splits=n_splits)
+    X, fullY = load(dataloc+"/data.csv")
+    split_sets(X, fullY, splits=n_splits)
 
     mean_weights = np.zeros((n_splits*n_chains, X.shape[1])) # initialize array to calculate weight averages
     mean_acc = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
     for i in range(n_splits):
-        trainX, trainY = data_loading.load((dataloc+"/train_"+str(i+1)+".csv"))
-        devX, devY = data_loading.load((dataloc+"/dev_"+str(i+1)+".csv"))
-        testX, testY = data_loading.load((dataloc+"/test_"+str(i+1)+".csv"))
+        trainX, trainY = load((dataloc+"/train_"+str(i+1)+".csv"))
+        devX, devY = load((dataloc+"/dev_"+str(i+1)+".csv"))
+        testX, testY = load((dataloc+"/test_"+str(i+1)+".csv"))
         X = np.concatenate((trainX, devX, testX), axis=0)
         indicesX = [trainX.shape[0], devX.shape[0], testX.shape[0]]
         for j in range(n_chains):
-            tmpX = data_loading.missing_rnorm(X, X)
-            tmpX = data_loading.standardize(tmpX, X)
+            tmpX = missing_rnorm(X, X)
+            tmpX = standardize(tmpX, X)
             tmptrainX = tmpX[:indicesX[0],:]
 
             #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
