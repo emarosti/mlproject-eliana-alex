@@ -1,31 +1,32 @@
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import sys
 from data_loading import *
 
-def train(trainX, trainY, k, criterion, maxfeats):
+def train(trainX, trainY, k):
     """
-    k number of decision trees in the random forest
+    k number of clusters
     """
     accuracies = []
-    importances = []
+    #importances = []
     for i in range(trainY.shape[1]-1):
-        randoforest = RandomForestClassifier(n_estimators=k, criterion=criterion, max_features=maxfeats, max_depth=2)
-        randoforest.fit(trainX,trainY[:,i])
-        accuracies.append(randoforest.score(trainX,trainY[:,i]))
-        importances.append(randoforest.feature_importances_)
-        # randoforest.apply(trainX)
-    return np.array(accuracies), np.array(importances), randoforest
+        nearestneibs = KNeighborsClassifier(n_neighbors=k)
+        nearestneibs.fit(trainX,trainY[:,i])
+        accuracies.append(nearestneibs.score(trainX,trainY[:,i]))
+        #importances.append(nearestneibs.kneighbors())
+        # nearestneibs.apply(trainX)
+    return np.array(accuracies), nearestneibs
 
-def predict(testX, testY, randoforest):
+def predict(testX, testY, nearestneibs):
     preds = []
     for i in range(testY.shape[1]-1):
-        preds.append(randoforest.score(testX,testY[:,i]))
+        preds.append(nearestneibs.score(testX,testY[:,i]))
     return np.array(preds)
 
 def extract_sig_features(k, features, importances):
     """given an array of features names and an array of importance values
     for each feature, return the k most important features
+    """
     """
     imps = np.copy(importances)
     imp_feats = []
@@ -35,8 +36,8 @@ def extract_sig_features(k, features, importances):
         imps[a] = 0
 
     return np.array(imp_feats)
-
-
+    """
+    pass
 
 def main(dataloc):
     """
@@ -67,33 +68,34 @@ def main(dataloc):
             tmpX = standardize(tmpX, X)
             tmptrainX = tmpX[:indicesX[0],:]
 
-            accuracies, importances, randoforest = train(trainX, trainY, 5, 'entropy', 70)
-            testaccuracies = predict(testX, testY, randoforest)
-            imp_sum += importances
+            accuracies, nearestneibs = train(trainX, trainY, 5)
+            testaccuracies = predict(testX, testY, nearestneibs)
+            #imp_sum += importances
             mean_acc[((i*n_chains)+j),:] = accuracies
             test_acc[((i*n_chains)+j),:] = testaccuracies
 
 
-    print "shape of summary:", imp_sum.shape, mean_acc.shape
-    print "shape per item:", accuracies.shape, importances.shape
+    #print "shape of summary:", imp_sum.shape, mean_acc.shape
+    #print "shape per item:", accuracies.shape, importances.shape
     print "mean accuracies:", np.mean(mean_acc, axis=0)
     print "test accuracies:", np.mean(test_acc, axis=0)
-    imp_sum = imp_sum / (n_splits * n_chains)
+    #imp_sum = imp_sum / (n_splits * n_chains)
 
-    # accuracies, importances, randoforest = train(trainX, trainY, 10, 'entropy', 70)
+    # accuracies, importances, nearestneibs = train(trainX, trainY, 10, 'entropy', 70)
     # #TO DO: reduce number of trees or prune trees to lower overfitting
-    # testaccuracies = predict(testX, testY, randoforest)
+    # testaccuracies = predict(testX, testY, nearestneibs)
 
     # print 'accuracies\n', accuracies
     # print 'importances\n', importances
     # print 'test accuracies\n', testaccuracies
-
+    """
     significant_features = []
     for i in range(importances.shape[0]):
         significant_features.append(extract_sig_features(12, features, imp_sum[i,:]))
     significant_features = np.array(significant_features)
 
     print 'Most significant features:\n', significant_features
+    """
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
