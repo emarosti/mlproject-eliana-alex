@@ -68,7 +68,7 @@ def main(dataloc):
             tmpX = standardize(tmpX, X)
             tmptrainX = tmpX[:indicesX[0],:]
 
-            accuracies, nearestneibs = train(trainX, trainY, 5)
+            accuracies, nearestneibs = train(trainX, trainY, 10)
             testaccuracies = predict(testX, testY, nearestneibs)
             #imp_sum += importances
             mean_acc[((i*n_chains)+j),:] = accuracies
