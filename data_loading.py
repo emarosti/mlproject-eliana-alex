@@ -10,8 +10,8 @@ def load(filename):
     (2) a matrix where the ith element has four labels describing the ith entry of the vector above.
     """
     data = np.loadtxt(filename, delimiter=',')
-    X = data[:, 0:data.shape[1]-4] # hard-coded for number of class columns
-    fullY = data[:, data.shape[1]-4:] # hard-coded for number of class columns
+    X = data[:, 0:data.shape[1]-5] # hard-coded for number of class columns
+    fullY = data[:, data.shape[1]-5:] # hard-coded for number of class columns
     return (X, fullY)
 
 def split_sets(X, fullY, test_size=0.2, splits=1):
@@ -56,46 +56,46 @@ def reshape(index_list, data, labels):
         y[i,:] = labels[index_list[i],:]
     return X, y
 
-def missing_mean(X):
+def missing_mean(X, fullX):
     """ MISSING DATA
     replace missing values (0.0) with column/feature mean
     """
-    stats = column_stats(X) # maximums and minimums are not accurate
+    stats = column_stats(fullX) # maximums and minimums are not accurate
+    tmpX = np.copy(X)
     for col in range(X.shape[1]):
         for row in range(X.shape[0]):
-            if X[row,col] == 0.0: X[row,col] = stats[2,col]
-    return X
+            if tmpX[row,col] == 0.0: tmpX[row,col] = stats[2,col]
+    return tmpX
 
-def missing_rnorm(X):
+def missing_rnorm(X, fullX):
     """ MISSING DATA
     replace missing values with random samples from a
     normal (Gaussian) distribution
     """
-    stats = column_stats(X) # maximums and minimums are not accurate
+    stats = column_stats(fullX) # maximums and minimums are not accurate
+    tmpX = np.copy(X)
     for col in range(X.shape[1]):
         for row in range(X.shape[0]):
-            if X[row,col] == 0.0:
-                stdev = np.std(X[:,col])
-                X[row,col] = np.random.normal(stats[2,col], stdev)
-    return X
+            if tmpX[row,col] == 0.0: tmpX[row,col] = np.random.normal(stats[2,col], stats[3,col])
+    return tmpX
 
 
-def normalize(X):
+def normalize(X, fullX):
     """ FEATURE SCALING
     (x - min) / (max - min)
     """
-    stats = column_stats(X)
+    stats = column_stats(fullX)
     for col in range(X.shape[1]):
         max_min = stats[0,col] - stats[1,col]
         for row in range(X.shape[0]):
             X[row,col] = (X[row,col] - stats[1,col]) / max_min
     return X
 
-def standardize(X): # uses missing values (currently mean values) in stdev calculation
+def standardize(X, fullX):
     """ FEATURE SCALING
     (x - mean) / stdev
     """
-    stats = column_stats(X)
+    stats = column_stats(fullX)
     for col in range(X.shape[1]):
         stdev = np.std(X[:,col])
         for row in range(X.shape[0]):
@@ -104,16 +104,20 @@ def standardize(X): # uses missing values (currently mean values) in stdev calcu
 
 def column_stats(X):
     """HELPER FUNCTION
-    returns 3 x D array with column maximum, minimum, and mean (w/o zero values)
+    returns 3 x D array with column maximum, minimum, mean, and stdev (w/o zero values)
     """
-    column_stats = np.zeros((3,X.shape[1]))
+    column_stats = np.zeros((4,X.shape[1]))
     for col in range(X.shape[1]):
         zero_count = 0.0
-        column_stats[0,col] = X[:,col].max()
-        column_stats[1,col] = X[:,col].min()
-        for row in range(X.shape[0]):
+        stdev = 0.0
+        column_stats[0,col] = X[:,col].max() # calculate maximum
+        column_stats[1,col] = X[:,col].min() # calculate minimum
+        for row in range(X.shape[0]): # calculate mean
             if X[row,col] == 0: zero_count += 1
         column_stats[2,col] = X[:,col].sum() / (X.shape[0] - zero_count)
+        for row in range(X.shape[0]): # calculate standard deviation
+            if X[row,col] != 0: stdev += (X[row,col] - column_stats[2,col]) ** 2
+        column_stats[3,col] = (stdev / (X.shape[0]-zero_count)) ** (0.5)
     return column_stats
 
 def load_features(filename):
@@ -128,10 +132,10 @@ def main(dataloc):
     #X, fullY = load((dataloc+"data.csv")) # hard-coded
     #print 'X BEFORE:'
     #print X
-    #X = missing_rnorm(X)
+    #X = missing_rnorm(X, X)
     #print 'X AFTER:'
     #print X
-    #X = standardize(X)
+    #X = standardize(X, X)
     #split_sets(X, fullY, splits=5)
     pass
 
