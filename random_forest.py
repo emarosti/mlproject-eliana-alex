@@ -17,6 +17,10 @@ def train(trainX, trainY, k, criterion, maxfeats):
         # randoforest.apply(trainX)
     return np.array(accuracies), np.array(importances)
 
+def predict(testX, testY):
+    pass
+    #for i in
+
 def extract_sig_features(k, features, importances):
     """given an array of features names and an array of importance values
     for each feature, return the k most important features
@@ -42,6 +46,7 @@ def main():
     testX, testY = load("data/test.csv") # may want to un-hard-code later
 
     accuracies, importances = train(trainX, trainY, 10, 'entropy', 70)
+    #TO DO: reduce number of trees or prune trees to lower overfitting
 
     #print 'accuracies\n', accuracies
     #print 'importances\n', importances
