@@ -79,22 +79,35 @@ def missing_rnorm(X, fullX):
             if tmpX[row,col] == 0.0: tmpX[row,col] = np.random.normal(stats[2,col], stats[3,col])
     return tmpX
 
-def missing_rm(X, fullX, threshold):
+def missing_rm(X, fullY, thresCol, thresRow):
     """ MISSING DATA
-    remove columns/rows with under threshold (%)
+    remove columns/rows with percent of missing values
+    less than or equal to respective thresholds
+    **NOTE: must be called before splitting data into sets
+    (cannot work with subset of X)
+    **NOTE: deletes from columns and rows at end due to
+    inability to modify fullX, therefore missing percentages
+    are not recalculated after columns are first deleted
     """
     tmpX = np.copy(X)
-    feat_nonzero = np.count_nonzeros(fullX, axis=0)
-    feat_nonzero = feat_nonzero / X.shape[0]
-    samples_nonzero = np.count_nonzeros(fullX, axis=1)
-    samples_nonzero = samples_nonzero / X.shape[1]
-    feat_bidx = (feat_nonzero > threshold)
-
-
+    tmpY = np.copy(fullY)
+    feat_nonzero = []
     for col in range(X.shape[1]):
-        for row in range(X.shape[0]):
-            np.count_nonzeros()
-    return tmpX
+        if (np.count_nonzero(X[:,col], axis=0) / float(X.shape[0])) <= thresCol:
+            #print (np.count_nonzero(fullX[:,col], axis=0) / float(X.shape[0]))
+            feat_nonzero.append(col)
+    samp_nonzero = []
+    for row in range(X.shape[0]):
+        if (np.count_nonzero(X[row,:], axis=1) / float(X.shape[1])) <= thresRow:
+            #print (np.count_nonzero(fullX[row,:], axis=1) / float(X.shape[1]))
+            samp_nonzero.append(row)
+    print "Deleting columns", feat_nonzero
+    print "Deleting rows", samp_nonzero
+    # flipped axis notation from count_nonzero
+    tmpX = np.delete(np.delete(tmpX, feat_nonzero, axis=1), samp_nonzero, axis=0)
+    tmpY = np.delete(tmpY, samp_nonzero, axis=0)
+    print "X size from", X.shape, "to", tmpX.shape, "\nY size from", fullY.shape, "to", tmpY.shape
+    return tmpX, tmpY
 
 
 def normalize(X, fullX):
@@ -146,7 +159,8 @@ def load_features(filename):
     return data
 
 def main(dataloc):
-    #X, fullY = load((dataloc+"data.csv")) # hard-coded
+    X, fullY = load((dataloc+"/data.csv")) # hard-coded
+    X = missing_rm(X, fullY, .95, .90)
     #print 'X BEFORE:'
     #print X
     #X = missing_rnorm(X, X)
