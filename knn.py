@@ -79,23 +79,7 @@ def main(dataloc):
     #print "shape per item:", accuracies.shape, importances.shape
     print "mean accuracies:", np.mean(mean_acc, axis=0)
     print "test accuracies:", np.mean(test_acc, axis=0)
-    #imp_sum = imp_sum / (n_splits * n_chains)
 
-    # accuracies, importances, nearestneibs = train(trainX, trainY, 10, 'entropy', 70)
-    # #TO DO: reduce number of trees or prune trees to lower overfitting
-    # testaccuracies = predict(testX, testY, nearestneibs)
-
-    # print 'accuracies\n', accuracies
-    # print 'importances\n', importances
-    # print 'test accuracies\n', testaccuracies
-    """
-    significant_features = []
-    for i in range(importances.shape[0]):
-        significant_features.append(extract_sig_features(12, features, imp_sum[i,:]))
-    significant_features = np.array(significant_features)
-
-    print 'Most significant features:\n', significant_features
-    """
 
 if __name__=='__main__':
     if len(sys.argv)!=2:
