@@ -81,6 +81,7 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     n_splits = int(splits)
     n_chains = int(chains)
     X, fullY = load(dataloc+"/data.csv")
+    X, fullY = missing_rm(X, fullY, .95, .90)
     split_sets(X, fullY, splits=n_splits)
 
     mean_weights = np.zeros((n_splits*n_chains, X.shape[1])) # initialize array to calculate weight averages
@@ -92,14 +93,14 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
         X = np.concatenate((trainX, devX, testX), axis=0)
         indicesX = [trainX.shape[0], devX.shape[0], testX.shape[0]]
         for j in range(n_chains):
-            tmpX = missing_rnorm(X, X)
-            tmpX = standardize(tmpX, X)
+            tmpX = standardize(missing_rnorm(X, X), X)
             tmptrainX = tmpX[:indicesX[0],:]
+            tmptestX = tmpX[indicesX[0]:,:] # use both dev+test splits as testing
+            tmptestY = np.concatenate((devY, testY), axis=0)
 
             #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
             clf = svc(tmptrainX, trainY)
-            accuracies = accuracy(clf, testX, testY)
-            print accuracies
+            accuracies = accuracy(clf, tmptestX, tmptestY)
             mean_acc[((i*n_chains)+j),:] = accuracies
             #mean_weights[((i*n_splits)+j),:] = ????
 
