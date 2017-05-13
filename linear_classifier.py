@@ -8,28 +8,17 @@ from data_loading import *  # contains helper functions
 # 0/1 NOTES
 # control/trisomy; saline/memantine; SC/CS; no_learning/yes_learning
 
-# def classifier(X, y, classi, alpha, eta0, epoch, learn):
-#     """ DEPRECATED
-#     type = 'log', 'hinge'
-#     learn = 'constant', 'optimal', 'invscaling'
-#     """
-#     weights = []
-#     intercepts = []
-#     for i in range(y.shape[1]-1): # currently ignoring last 8-class column
-#         sgd = SGDClassifier(loss=classi, alpha=alpha, eta0=eta0, n_iter=epoch,
-#             learning_rate=learn, verbose=0)
-#         sgd.fit(X, y[:,i])
-#         weights.append(sgd.coef_)
-#         intercepts.append(sgd.intercept_)
-#     return sgd, weights, intercepts
-
-def svc(X, y):
+def svc(X, y, kernel):
     """
+    kernel = 'rbf', 'linear'
     """
+    importances = np.zeros((y.shape[1]-1, X.shape[1]))
     for i in range(y.shape[1]-1):
-        clf = SVC(kernel='rbf') # could change to linear
+        clf = SVC(kernel=kernel) # could change to linear
         clf.fit(X, y[:,i])
-    return clf
+        if kernel == 'linear': importances[i,:] = clf.coef_
+    if kernel == 'rbf': return clf
+    if kernel == 'linear': return clf, importances
 
 def accuracy(clf, testX, testY):
     """
@@ -40,48 +29,32 @@ def accuracy(clf, testX, testY):
         accuracies.append(clf.score(testX, testY[:,i]))
     return accuracies
 
-def extract_sig_features(k, features, importances):
-    """given an array of features names and an array of importance values
-    for each feature, return the k most important features
+def extract_sig_features(k, features, importances, direction):
+    """
+    given an array of features names and an array of importance values
+    for each feature, return the k most important features in order of
+    decreasing magnitude
+    direction = 'top', 'bottom'
     """
     imps = np.copy(importances)
-    imp_feats = []
-    for i in range(k):
-        a = np.argmax(imps)
-        imp_feats.append(features[a])
-        imps[a] = 0
-
-    return np.array(imp_feats)
-
-def show_significant_features(w, featurelist):
-    wsorted = np.argsort(w)
-    print 'Features predicting:', ', '.join(map(lambda i: featurelist[i], wsorted[:30]))
-    print 'Features predicting bill died:', ', '.join(map(lambda i: featurelist[i], wsorted[-30:][::-1]))
-
-def gridsearch(trainX, trainY, devX, devY, classifier_types, maxiter_values, eta0_values, learn_values, alpha_values):
-    hyperparamdict = {}
-    for classi in classifier_types:
-        for maxiter in maxiter_values:
-            for eta0 in eta0_values:
-                for learn in learn_values:
-                    for alpha in alpha_values:
-                        sgd, w, b = classifier(trainX, trainY, classi=classi, epoch=maxiter, eta0=eta0, learn=learn, alpha=alpha)
-                        print 'type=', classi, 'maxiter=', maxiter, 'eta0=', eta0, 'learn', learn, 'alpha=', alpha #NECESSARY? 'training accuracy=', train_accuracy
-                        #predictions = sgd.predict(w, b, devX)
-                        hyperparamdict[(classi, maxiter, eta0, learn, alpha)] = {}
-                        hyperparamdict[(classi, maxiter, eta0, learn, alpha)]['dev accuracy'] = sgd.score(devX, devY)
-                        hyperparamdict[(classi, maxiter, eta0, learn, alpha)]['hyperplane'] = w, b
-    return hyperparamdict
+    feat_names = []
+    if direction == 'top': a = np.argsort(imps)[-k:][::-1]
+    if direction == 'bottom': a = np.argsort(imps)[:k]
+    for i in range(len(a)):
+        feat_names.append(features[a[i]])
+    return np.array(feat_names)
 
 def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     n_splits = int(splits)
     n_chains = int(chains)
+    features = load_features(dataloc+"/protein_features.csv")
     X, fullY = load(dataloc+"/data.csv")
     X, fullY = missing_rm(X, fullY, .95, .90)
     split_sets(X, fullY, splits=n_splits)
 
-    mean_weights = np.zeros((n_splits*n_chains, X.shape[1])) # initialize array to calculate weight averages
-    mean_acc = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
+    sum_import = np.zeros((fullY.shape[1]-1, X.shape[1])) # initialize array to calculate weight averages
+    mean_acc1 = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
+    mean_acc2 = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
     for i in range(n_splits):
         trainX, trainY = load((dataloc+"/train_"+str(i+1)+".csv"))
         devX, devY = load((dataloc+"/dev_"+str(i+1)+".csv"))
@@ -95,11 +68,32 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
             tmptestY = np.concatenate((devY, testY), axis=0)
 
             #clf, w, b = classifier(trainX, trainY, 'log', 0.0001, 0.0, 5, 'optimal')
-            clf = svc(tmptrainX, trainY)
-            accuracies = accuracy(clf, tmptestX, tmptestY)
-            mean_acc[((i*n_chains)+j),:] = accuracies
+            clf1 = svc(tmptrainX, trainY, 'rbf')
+            clf2, importances = svc(tmptrainX, trainY, 'linear')
+            accuracies1 = accuracy(clf1, tmptestX, tmptestY)
+            accuracies2 = accuracy(clf2, tmptestX, tmptestY)
+            mean_acc1[((i*n_chains)+j),:] = accuracies1
+            mean_acc2[((i*n_chains)+j),:] = accuracies2
+            sum_import += importances
 
-    print "mean accuracies:", np.mean(mean_acc, axis=0)
+    print "test accuracies, 'rbf':", np.mean(mean_acc1, axis=0)
+    print "test accuracies, 'linear':", np.mean(mean_acc1, axis=0)
+
+    pos_sigfeat = []
+    neg_sigfeat = []
+    abs_sigfeat = []
+    for i in range(importances.shape[0]):
+        pos_sigfeat.append(extract_sig_features(6, features, sum_import[i,:], 'top'))
+        neg_sigfeat.append(extract_sig_features(6, features, sum_import[i,:], 'bottom'))
+        abs_sigfeat.append(extract_sig_features(6, features, abs(sum_import[i,:]), 'top'))
+    pos_sigfeat = np.array(pos_sigfeat)
+    neg_sigfeat = np.array(neg_sigfeat)
+    abs_sigfeat = np.array(abs_sigfeat)
+
+
+    print "most significant features -> 1, 'linear':\n", pos_sigfeat
+    print "most significant features -> 0, 'linear':\n", neg_sigfeat
+    print "most significant features, absolute value, 'linear':\n", abs_sigfeat
 
 if __name__=='__main__':
     if (len(sys.argv) != 4):
