@@ -26,14 +26,10 @@ from data_loading import *  # contains helper functions
 def svc(X, y):
     """
     """
-    #weights = [] # may make into ndarray
-    #intercepts = []
     for i in range(y.shape[1]-1):
-        clf = SVC(kernel='rbf') # vs. default 'rbf' ..alter later?
+        clf = SVC(kernel='rbf') # could change to linear
         clf.fit(X, y[:,i])
-        #weights.append(clf.coef_)
-        #intercepts.append(clf.coef_)
-    return clf#, weights, intercepts
+    return clf
 
 def accuracy(clf, testX, testY):
     """
@@ -102,24 +98,8 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
             clf = svc(tmptrainX, trainY)
             accuracies = accuracy(clf, tmptestX, tmptestY)
             mean_acc[((i*n_chains)+j),:] = accuracies
-            #mean_weights[((i*n_splits)+j),:] = ????
 
     print "mean accuracies:", np.mean(mean_acc, axis=0)
-    #print "mean weights:", np.mean(mean_weights, axis=0)
-"""
-    hyperparamdict = gridsearch(trainX, trainY, devX, devY,
-                                   classifier_types=['log', 'hinge'],
-                                   maxiter_values=[5, 25], # number of epochs
-                                   eta0_values=[0.1, 0.01], # eta0
-                                   learn_values=['constant', 'optimal', 'invscaling'],
-                                   alpha_values=[0.1, 0.00001]) # regularization weight
-"""
-    #print 'Hyperparameter search results:'
-    #for params in hyperparamdict:
-    #    print params, hyperparamdict[params]['dev accuracy']
-
-    #best_hyperparams = max(hyperparamdict.items(), key=lambda x:x[1]['dev accuracy'])[0]
-
 
 if __name__=='__main__':
     if (len(sys.argv) != 4):
