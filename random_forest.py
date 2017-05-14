@@ -32,7 +32,7 @@ def predict(testX, testY, randoforest):
 
 def extract_sig_features(k, features, importances, direction):
     """
-    Given an array of features names and an array of importance values
+    given an array of features names and an array of importance values
     for each feature, return the k most important features in order of
     decreasing magnitude for both positive/negative predictions
     """
@@ -79,6 +79,7 @@ def main(dataloc, splits, chains, feats):
             tmptrainX = tmpX[:indicesX[0],:]
             tmptestX = tmpX[indicesX[0]:,:] # use both dev+test splits as testing
             tmptestY = np.concatenate((devY, testY), axis=0)
+
 
             accuracies, importances, randoforest = train(trainX, trainY, 10, 'entropy', trainX.shape[1])
             testaccuracies = predict(testX, testY, randoforest)
