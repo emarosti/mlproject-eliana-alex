@@ -93,7 +93,7 @@ def missing_rm(X, fullY, thresCol, thresRow):
     tmpY = np.copy(fullY)
     feat_nonzero = []
     for col in range(X.shape[1]):
-        if (np.count_nonzero(X[:,col], axis=0) / float(X.shape[0])) <= thresCol:
+        if (np.count_nonzero(X[:,col]) / float(X.shape[0])) <= thresCol:
             #print (np.count_nonzero(fullX[:,col], axis=0) / float(X.shape[0]))
             feat_nonzero.append(col)
     samp_nonzero = []
