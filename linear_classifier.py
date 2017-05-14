@@ -49,6 +49,7 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     n_chains = int(chains)
     features = load_features(dataloc+"/protein_features.csv")
     X, fullY = load(dataloc+"/data.csv")
+    print X.shape, fullY.shape
     X, fullY = missing_rm(X, fullY, .95, .90)
     split_sets(X, fullY, splits=n_splits)
 
