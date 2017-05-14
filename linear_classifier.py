@@ -49,8 +49,6 @@ def extract_sig_features(k, features, importances, direction):
     """
     imps = np.copy(importances)
     all_names = []
-    #if direction == 'top': args = np.argsort(imps, axis=1)[-k:][::-1]
-    #if direction == 'bottom': args = np.argsort(imps, axis=1)[:k]
     args = np.argsort(imps, axis=1)
     for i in range(args.shape[0]):
         feat_names = []

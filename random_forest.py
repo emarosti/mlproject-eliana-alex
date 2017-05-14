@@ -22,11 +22,11 @@ def predict(testX, testY, randoforest):
     for i in range(testY.shape[1]-1):
         preds.append(randoforest.score(testX,testY[:,i]))
     return np.array(preds)
-
+"""
 def extract_sig_features(k, features, importances):
-    """given an array of features names and an array of importance values
+    ""given an array of features names and an array of importance values
     for each feature, return the k most important features
-    """
+    ""
     imps = np.copy(importances)
     imp_feats = []
     for i in range(k):
@@ -35,7 +35,26 @@ def extract_sig_features(k, features, importances):
         imps[a] = 0
 
     return np.array(imp_feats)
-
+"""
+def extract_sig_features(k, features, importances, direction):
+    """
+    given an array of features names and an array of importance values
+    for each feature, return the k most important features in order of
+    decreasing magnitude for both positive/negative predictions
+    """
+    imps = np.copy(importances)
+    all_names = []
+    args = np.argsort(imps, axis=1)
+    for i in range(args.shape[0]):
+        feat_names = []
+        for j in range(args.shape[1]):
+            feat_names.append(features[args[i,j]])
+        all_names.append(feat_names)
+    all_names = np.array(all_names)
+    for i in range(args.shape[0]):
+        print "Best features for predicting label", i, all_names[i,:k]
+        # negative/low weights are not informative
+    return all_names
 
 
 def main(dataloc):
@@ -53,7 +72,7 @@ def main(dataloc):
     X, fullY = load(dataloc+"/data.csv")
     split_sets(X, fullY, splits=n_splits)
 
-    imp_sum = np.zeros((fullY.shape[1]-1, X.shape[1])) # initialize array to calculate weight averages
+    sum_import = np.zeros((fullY.shape[1]-1, X.shape[1])) # initialize array to calculate weight averages
     mean_acc = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
     test_acc = np.zeros((n_splits*n_chains, fullY.shape[1]-1))
     for i in range(n_splits): # or could be passed as an argument
@@ -63,38 +82,38 @@ def main(dataloc):
         X = np.concatenate((trainX, devX, testX), axis=0)
         indicesX = [trainX.shape[0], devX.shape[0], testX.shape[0]]
         for j in range(n_chains):
-            tmpX = missing_rnorm(X, X)
-            tmpX = standardize(tmpX, X)
+            tmpX = standardize(missing_rnorm(X, X), X)
             tmptrainX = tmpX[:indicesX[0],:]
+            tmptestX = tmpX[indicesX[0]:,:] # use both dev+test splits as testing
+            tmptestY = np.concatenate((devY, testY), axis=0)
 
-            accuracies, importances, randoforest = train(trainX, trainY, 5, 'entropy', 70)
-            testaccuracies = predict(testX, testY, randoforest)
-            imp_sum += importances
+            accuracies, importances, randoforest = train(tmptrainX, trainY, 5, 'entropy', 70)
+            testaccuracies = predict(tmptestX, tmptestY, randoforest)
+            sum_import += importances
             mean_acc[((i*n_chains)+j),:] = accuracies
             test_acc[((i*n_chains)+j),:] = testaccuracies
 
 
-    print "shape of summary:", imp_sum.shape, mean_acc.shape
+    print "shape of summary:", sum_import.shape, mean_acc.shape
     print "shape per item:", accuracies.shape, importances.shape
     print "mean accuracies:", np.mean(mean_acc, axis=0)
     print "test accuracies:", np.mean(test_acc, axis=0)
-    imp_sum = imp_sum / (n_splits * n_chains)
+    sum_import = sum_import/ (n_splits * n_chains)
 
     # accuracies, importances, randoforest = train(trainX, trainY, 10, 'entropy', 70)
     # #TO DO: reduce number of trees or prune trees to lower overfitting
     # testaccuracies = predict(testX, testY, randoforest)
 
-    # print 'accuracies\n', accuracies
-    # print 'importances\n', importances
-    # print 'test accuracies\n', testaccuracies
+    ordered_feat = extract_sig_features(6, features, sum_import, 'top')
 
+"""
     significant_features = []
     for i in range(importances.shape[0]):
         significant_features.append(extract_sig_features(12, features, imp_sum[i,:]))
     significant_features = np.array(significant_features)
 
     print 'Most significant features:\n', significant_features
-
+"""
 if __name__=='__main__':
     if len(sys.argv)!=2:
         print 'Usage: python random_forest.py dataloc'
