@@ -22,20 +22,7 @@ def predict(testX, testY, randoforest):
     for i in range(testY.shape[1]-1):
         preds.append(randoforest.score(testX,testY[:,i]))
     return np.array(preds)
-"""
-def extract_sig_features(k, features, importances):
-    ""given an array of features names and an array of importance values
-    for each feature, return the k most important features
-    ""
-    imps = np.copy(importances)
-    imp_feats = []
-    for i in range(k):
-        a = np.argmax(imps)
-        imp_feats.append(features[a])
-        imps[a] = 0
 
-    return np.array(imp_feats)
-"""
 def extract_sig_features(k, features, importances, direction):
     """
     given an array of features names and an array of importance values
@@ -106,14 +93,6 @@ def main(dataloc):
 
     ordered_feat = extract_sig_features(6, features, sum_import, 'top')
 
-"""
-    significant_features = []
-    for i in range(importances.shape[0]):
-        significant_features.append(extract_sig_features(12, features, imp_sum[i,:]))
-    significant_features = np.array(significant_features)
-
-    print 'Most significant features:\n', significant_features
-"""
 if __name__=='__main__':
     if len(sys.argv)!=2:
         print 'Usage: python random_forest.py dataloc'
