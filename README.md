@@ -5,8 +5,8 @@ NOTE: had to reduce decimal points per data entry number
 
 DATA SET
 Download modified data/feature files:
-  protein_features.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5eEp1dHRpRGw2cDg)
-  data.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5bVVqemdKQzBhd3c)
+  - protein_features.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5eEp1dHRpRGw2cDg)
+  - data.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5bVVqemdKQzBhd3c)
 
 FILES
 
