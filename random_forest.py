@@ -10,7 +10,7 @@ def train(trainX, trainY, k, criterion, maxfeats):
     accuracies = []
     importances = []
     for i in range(trainY.shape[1]-1):
-        randoforest = RandomForestClassifier(n_estimators=k, criterion=criterion, max_features=maxfeats, max_depth=2)
+        randoforest = RandomForestClassifier(n_estimators=k, criterion=criterion, max_features=maxfeats)
         randoforest.fit(trainX,trainY[:,i])
         accuracies.append(randoforest.score(trainX,trainY[:,i]))
         importances.append(randoforest.feature_importances_)
@@ -51,6 +51,7 @@ def main(dataloc):
     print "Using %i splits and %i chains" % (n_splits, n_chains)
     features = load_features(dataloc+"/protein_features.csv")
     X, fullY = load(dataloc+"/data.csv")
+    X, fullY = missing_rm(X,fullY, .95, .9)
     split_sets(X, fullY, splits=n_splits)
 
     imp_sum = np.zeros((fullY.shape[1]-1, X.shape[1])) # initialize array to calculate weight averages
@@ -67,7 +68,7 @@ def main(dataloc):
             tmpX = standardize(tmpX, X)
             tmptrainX = tmpX[:indicesX[0],:]
 
-            accuracies, importances, randoforest = train(trainX, trainY, 5, 'entropy', 70)
+            accuracies, importances, randoforest = train(trainX, trainY, 10, 'entropy', trainX.shape[1])
             testaccuracies = predict(testX, testY, randoforest)
             imp_sum += importances
             mean_acc[((i*n_chains)+j),:] = accuracies
