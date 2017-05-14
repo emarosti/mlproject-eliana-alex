@@ -4,44 +4,30 @@ import sys
 from data_loading import *
 
 def train(trainX, trainY, k):
-    """
-    k number of clusters
+    """Train the knn classifier on the data
+    k = number of clusters
     """
     accuracies = []
-    #importances = []
+
     for i in range(trainY.shape[1]-1):
         nearestneibs = KNeighborsClassifier(n_neighbors=k)
         nearestneibs.fit(trainX,trainY[:,i])
         accuracies.append(nearestneibs.score(trainX,trainY[:,i]))
-        #importances.append(nearestneibs.kneighbors())
-        # nearestneibs.apply(trainX)
+
     return np.array(accuracies), nearestneibs
 
 def predict(testX, testY, nearestneibs):
+    """ Make predictions on the test data
+    """
     preds = []
     for i in range(testY.shape[1]-1):
         preds.append(nearestneibs.score(testX,testY[:,i]))
     return np.array(preds)
 
-def extract_sig_features(k, features, importances):
-    """given an array of features names and an array of importance values
-    for each feature, return the k most important features
-    """
-    """
-    imps = np.copy(importances)
-    imp_feats = []
-    for i in range(k):
-        a = np.argmax(imps)
-        imp_feats.append(features[a])
-        imps[a] = 0
-
-    return np.array(imp_feats)
-    """
-    pass
 
 def main(dataloc):
     """
-    what do you call a sleepy trex? a dino-snore lol
+    MAIN METHOD
     """
 
     features = load_features("data/protein_features.csv")

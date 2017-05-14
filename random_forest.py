@@ -3,28 +3,34 @@ import numpy as np
 import sys
 from data_loading import *
 
-def train(trainX, trainY, k, criterion, maxfeats):
-    """
-    k number of decision trees in the random forest
+def train(trainX, trainY, k, criterion, maxfeats, maxdepth=None):
+    """ Train the Random Forest classifier on the data
+    k = number of decision trees in the random forest
+    criterion = entropy
+    maxfeats = maximum number of features to consider
+    maxdepth = maximum depth of each decision tree within the forest
     """
     accuracies = []
     importances = []
     for i in range(trainY.shape[1]-1):
-        randoforest = RandomForestClassifier(n_estimators=k, criterion=criterion, max_features=maxfeats)
+        randoforest = RandomForestClassifier(n_estimators=k, criterion=criterion, max_features=maxfeats, max_depth=maxdepth)
         randoforest.fit(trainX,trainY[:,i])
-        accuracies.append(randoforest.score(trainX,trainY[:,i]))
-        importances.append(randoforest.feature_importances_)
-        # randoforest.apply(trainX)
+
+        accuracies.append(randoforest.score(trainX,trainY[:,i])) #accuracies
+        importances.append(randoforest.feature_importances_) #importance values for features
+
     return np.array(accuracies), np.array(importances), randoforest
 
 def predict(testX, testY, randoforest):
+    """ Make predictions on the test data
+    """
     preds = []
     for i in range(testY.shape[1]-1):
         preds.append(randoforest.score(testX,testY[:,i]))
     return np.array(preds)
 
 def extract_sig_features(k, features, importances):
-    """given an array of features names and an array of importance values
+    """Given an array of features names and an array of importance values
     for each feature, return the k most important features
     """
     imps = np.copy(importances)
@@ -40,7 +46,7 @@ def extract_sig_features(k, features, importances):
 
 def main(dataloc):
     """
-    what do you call a sleepy trex? a dino-snore lol
+    MAIN METHOD
     """
 
     features = load_features("data/protein_features.csv")
