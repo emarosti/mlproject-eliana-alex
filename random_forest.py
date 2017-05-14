@@ -44,19 +44,18 @@ def extract_sig_features(k, features, importances, direction):
     return all_names
 
 
-def main(dataloc):
+def main(dataloc, splits, chains, feats):
     """
     what do you call a sleepy trex? a dino-snore lol
     """
+    n_splits = int(splits)
+    n_chains = int(chains)
+    n_feats = int(feats)
+    print "Using %i splits and %i chains..." % (n_splits, n_chains)
 
-    features = load_features("data/protein_features.csv")
-
-    # currently hard-coded, should be argument:
-    n_splits = 5
-    n_chains = 10
-    print "Using %i splits and %i chains" % (n_splits, n_chains)
     features = load_features(dataloc+"/protein_features.csv")
     X, fullY = load(dataloc+"/data.csv")
+    X, fullY = missing_rm(X, fullY, .95, .90)
     split_sets(X, fullY, splits=n_splits)
 
     sum_import = np.zeros((fullY.shape[1]-1, X.shape[1])) # initialize array to calculate weight averages
@@ -80,9 +79,6 @@ def main(dataloc):
             mean_acc[((i*n_chains)+j),:] = accuracies
             test_acc[((i*n_chains)+j),:] = testaccuracies
 
-
-    print "shape of summary:", sum_import.shape, mean_acc.shape
-    print "shape per item:", accuracies.shape, importances.shape
     print "mean accuracies:", np.mean(mean_acc, axis=0)
     print "test accuracies:", np.mean(test_acc, axis=0)
     sum_import = sum_import/ (n_splits * n_chains)
@@ -91,10 +87,10 @@ def main(dataloc):
     # #TO DO: reduce number of trees or prune trees to lower overfitting
     # testaccuracies = predict(testX, testY, randoforest)
 
-    ordered_feat = extract_sig_features(6, features, sum_import, 'top')
+    ordered_feat = extract_sig_features(n_feats, features, sum_import, 'top')
 
 if __name__=='__main__':
-    if len(sys.argv)!=2:
-        print 'Usage: python random_forest.py dataloc'
+    if len(sys.argv)!= 5:
+        print 'Usage: python random_forest.py dataloc num_splits num_chains num_feats'
     else:
-        main(sys.argv[1])
+        main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
