@@ -4,6 +4,7 @@ Eliana Marostica & Alexandria Guo
 
 DATA SET
 Download modified data/feature files:
+<<<<<<< HEAD
   protein_features.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5eEp1dHRpRGw2cDg)
   data.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5bVVqemdKQzBhd3c)
 Modifications:
@@ -11,6 +12,10 @@ Modifications:
   - replaced all missing values with 0.0
   - converted string class labels to 0.0/1.0 (float)
   - added learning class labels (0.0/1.0) and treatment group labels (0.0-7.0)
+=======
+  - protein_features.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5eEp1dHRpRGw2cDg)
+  - data.csv (https://drive.google.com/open?id=0B0fkiTnzLsi5bVVqemdKQzBhd3c)
+>>>>>>> 8544d9a1d58cbb700ec9e34b73b49d7fcdee0ae8
 
 FILES
 data_loading.py
