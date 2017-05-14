@@ -49,8 +49,6 @@ def extract_sig_features(k, features, importances, direction):
     """
     imps = np.copy(importances)
     all_names = []
-    #if direction == 'top': args = np.argsort(imps, axis=1)[-k:][::-1]
-    #if direction == 'bottom': args = np.argsort(imps, axis=1)[:k]
     args = np.argsort(imps, axis=1)
     for i in range(args.shape[0]):
         feat_names = []
@@ -63,9 +61,12 @@ def extract_sig_features(k, features, importances, direction):
         print "Best features for predicting 1 for label", i, all_names[i,-k:][::-1]
     return all_names
 
-def main(dataloc, splits, chains): # testing 5 splits, 10 chains
+def main(dataloc, splits, chains, feats):
     n_splits = int(splits)
     n_chains = int(chains)
+    n_feats = int(feats)
+    print "Using %i splits and %i chains..." % (n_splits, n_chains)
+
     features = load_features(dataloc+"/protein_features.csv")
     X, fullY = load(dataloc+"/data.csv")
     print X.shape, fullY.shape
@@ -102,10 +103,10 @@ def main(dataloc, splits, chains): # testing 5 splits, 10 chains
     print "test accuracies, 'rbf':", (sum_acc[2,:] / (n_splits*n_chains))
     print "test accuracies, 'linear':", (sum_acc[3,:] / (n_splits*n_chains))
 
-    ordered_feat = extract_sig_features(6, features, sum_import, 'top')
+    ordered_feat = extract_sig_features(n_feats, features, sum_import, 'top')
 
 if __name__=='__main__':
-    if (len(sys.argv) != 4):
-        print 'Usage: python linear_classifer.py dataloc num_splits num_chains'
+    if (len(sys.argv) != 5):
+        print 'Usage: python linear_classifer.py dataloc num_splits num_chains num_feats'
     else:
-        main(sys.argv[1], sys.argv[2], sys.argv[3])
+        main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
