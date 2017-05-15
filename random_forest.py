@@ -1,3 +1,8 @@
+"""
+Eliana Marostica and Alex Guo
+CS 349 Final Project
+"""
+
 from sklearn.ensemble import RandomForestClassifier
 import numpy as np
 import sys

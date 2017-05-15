@@ -1,3 +1,8 @@
+"""
+Eliana Marostica and Alex Guo
+CS 349 Final Project
+"""
+
 from sklearn.linear_model import SGDClassifier
 from sklearn.svm import SVC
 import numpy as np
@@ -35,6 +40,7 @@ def svc(X, y, kernel):
 
 def accuracy(clf, testX, testY):
     """
+    Determine the accuracy for a classifier's prediction on the test data.
     """
     accuracies = []
     for i in range(testY.shape[1]-1):
@@ -43,7 +49,7 @@ def accuracy(clf, testX, testY):
 
 def extract_sig_features(k, features, importances, direction):
     """
-    given an array of features names and an array of importance values
+    Given an array of features names and an array of importance values
     for each feature, return the k most important features in order of
     decreasing magnitude for both positive/negative predictions
     """
@@ -62,6 +68,9 @@ def extract_sig_features(k, features, importances, direction):
     return all_names
 
 def main(dataloc, splits, chains, feats):
+    """
+    MAIN METHOD
+    """
     n_splits = int(splits)
     n_chains = int(chains)
     n_feats = int(feats)

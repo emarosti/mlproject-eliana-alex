@@ -1,3 +1,8 @@
+"""
+Eliana Marostica and Alex Guo
+CS 349 Final Project
+"""
+
 from sklearn.neighbors import KNeighborsClassifier
 import numpy as np
 import sys

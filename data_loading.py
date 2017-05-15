@@ -1,3 +1,8 @@
+"""
+Eliana Marostica and Alex Guo
+CS 349 Final Project
+"""
+
 import sys
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
